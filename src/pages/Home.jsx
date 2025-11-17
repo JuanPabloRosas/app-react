@@ -10,7 +10,7 @@ export default function Home() {
       </section>
       {/* Hero */}
       <section className="hero">
-        <h1>Retail MVP</h1>
+        <h1>Retail MVP Test</h1>
         <p>
           Soluciones en la nube para problemas complejos de retail:
           Timetabling, Routing, Location y Scheduling.
