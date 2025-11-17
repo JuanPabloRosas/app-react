@@ -64,6 +64,11 @@ body {
   border-radius: 5px;
 }
 
+.logo {
+  height: 40px;
+  margin-right: 10px;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .hamburger {

@@ -7,8 +7,9 @@ export default function Navbar() {
 
   return (
     <nav className="navbar">
-      <h1>Retail MVP</h1>
-
+      <img src="/images/Logo_DatlasMX.png" alt="Logo" class="logo"></img>
+      <h1></h1>
+    
       {/* Botón hamburguesa */}
       <div className="hamburger" onClick={() => setIsOpen(!isOpen)}>
         <span></span>

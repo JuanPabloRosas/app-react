@@ -4,12 +4,14 @@ export default function App() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
+  const [capacidad, setCapacidad] = useState(10);
+  const [costoPerdida, setCostoPerdida] = useState(1000);
+  const [jornada, setJornada] = useState(8);
   useEffect(() => {
     const fetchTimetable = async () => {
       try {
         const response = await fetch(
-          "https://timetabling-api-671543932444.northamerica-south1.run.app/solve",
+          "https://api-timetabling-app-react-671543932444.northamerica-south1.run.app",
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -29,6 +31,10 @@ export default function App() {
       } catch (err) {
         console.error("Error al llamar la API:", err);
         setError(err.message);
+        setData([
+        { Empleado: "Ana", Turno: "T1", Dia: 0, Inicio: 6, Fin: 15, Costo: 120 },
+        { Empleado: "Luis", Turno: "T2", Dia: 0, Inicio: 9, Fin: 18, Costo: 100 }
+      ]);
       } finally {
         setLoading(false);
       }
@@ -57,6 +63,7 @@ export default function App() {
 );
 
   return (
+    
     <div className='hero' style={{ padding: 0}}>
       <h1>Horarios de Personal (Timetabling)</h1>
         <p>
@@ -71,7 +78,47 @@ export default function App() {
         una penalización por no atender a un cliente y una capacidad de 10 clientes por hora por epleado.
       </p>
       <h2>Datos necesarios</h2>
-      
+      <div className="grid gap-6">
+      {/* Capacidad */}
+      <div className='hero' style={{ padding: 0}}>
+        <label>Capacidad (personas/hora): {capacidad}</label>
+        <input
+          type="range"
+          min="0"
+          max="20"
+          value={capacidad}
+          onChange={(e) => setCapacidad(e.target.value)}
+        />
+        <input
+          type="number"
+          value={capacidad}
+          onChange={(e) => setCapacidad(e.target.value)}
+        />
+      </div>
+
+      {/* Costo perdida */}
+      <div>
+        <label>Costo de pérdida ($):</label>
+        <input
+          type="number"
+          value={costoPerdida}
+          onChange={(e) => setCostoPerdida(e.target.value)}
+        />
+      </div>
+
+      {/* Jornada */}
+      <div>
+        <label>Jornada laboral (hrs):</label>
+        <input
+          type="number"
+          min="24"
+          max="60"
+          value={jornada}
+          onChange={(e) => setJornada(e.target.value)}
+        />
+      </div>
+
+    </div>
       <h1>Horarios de Personal</h1>
       <table style={{ width: "100%", borderCollapse: "collapse" }}>
         <thead>
