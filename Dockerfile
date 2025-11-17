@@ -1,4 +1,4 @@
-FROM node:22.19 AS build
+FROM node:20 AS build
 
 WORKDIR /app
 
@@ -9,13 +9,13 @@ COPY . .
 
 RUN npm run build
 
-FROM node:22.19
+FROM node:20
 
 RUN npm install -g serve
 
 WORKDIR /app
 
-COPY --from-build /app/build ./build
+COPY --from=build /app/build ./build
 
 EXPOSE 8080
 
