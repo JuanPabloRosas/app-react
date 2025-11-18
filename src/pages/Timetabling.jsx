@@ -11,13 +11,16 @@ export default function App() {
     const fetchTimetable = async () => {
       try {
         const response = await fetch(
-          "https://api-timetabling-app-react-671543932444.northamerica-south1.run.app",
+          "https://api-timetabling-app-react-671543932444.northamerica-south1.run.app/solve",
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               sucursal: "DummySucursal",
-              staff: [{ empleado: "Ana" }, { empleado: "Luis" }]
+              staff: [{ empleado: "Ana" }, { empleado: "Luis" }],
+              capacidad_atencion: capacidad,
+              costo_perdida: costoPerdida,
+              jornada_laboral: jornada
             }),
           }
         );
@@ -41,7 +44,7 @@ export default function App() {
     };
 
     fetchTimetable();
-  }, []);
+  }, [capacidad, costoPerdida,jornada]);
 
     if (loading) return (
   <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }}>
