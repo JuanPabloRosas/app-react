@@ -78,7 +78,7 @@ function GanttChart({ data }) {
                 Día: {d.dia}<br />
                 Inicio: {d.start}:00<br />
                 Fin: {d.end}:00<br />
-                Duración: {d.length} h
+                {/*Duración: {d.length} h*/}
               </div>
             );
           }}

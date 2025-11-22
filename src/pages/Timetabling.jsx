@@ -1,5 +1,6 @@
 import { useState } from "react";
 import GanttChart from "../components/GanttChart";
+import GanttSVG from "../components/GanttSVG";
 
 
 export default function App() {
@@ -112,8 +113,8 @@ export default function App() {
           <label>Jornada laboral (hrs):</label>
           <input
             type="number"
-            min="4"
-            max="14"
+            min="24"
+            max="168"
             value={jornada}
             onChange={(e) => setJornada(e.target.value)}
           />
@@ -181,6 +182,7 @@ export default function App() {
       </table>
       {/* Aquí aparece el Gantt */}
       <GanttChart data={data} />
+      <GanttSVG data={data} width={1000} />
     </div>
   );
 }
