@@ -1,7 +1,7 @@
 import { useState } from "react";
 import GanttChart from "../components/GanttChart";
 import GanttSVG from "../components/GanttSVG";
-
+import { useMemo } from "react";
 
 export default function App() {
   const [data, setData] = useState([]);
@@ -12,7 +12,7 @@ export default function App() {
 
   const [capacidad, setCapacidad] = useState(10);
   const [costoPerdida, setCostoPerdida] = useState(1000);
-  const [jornada, setJornada] = useState(8);
+  const [jornada, setJornada] = useState(24);
 
   const fetchTimetable = async () => {
     setLoading(true);
@@ -41,8 +41,6 @@ export default function App() {
       const json = await response.json();
       setData(json.timetable);
       setObjective(json.costo_total);
-
-
     } catch (err) {
       console.error("Error al llamar la API:", err);
       setError(err.message);
@@ -55,6 +53,10 @@ export default function App() {
     }
   };
 
+  const totalSemanal = useMemo(() => {
+  return data.reduce(
+    (acc, row) => acc + row.Costo * jornada, 0);
+      }, [data, jornada]);
   if (loading) return (
     <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }}>
       <div style={{
@@ -149,12 +151,20 @@ export default function App() {
       borderRadius: "10px",
       textAlign: "center",
     }}>
+
       Costo Total: {
   typeof objective === "number"
     ? `$ ${objective.toFixed(2)}`
     : "—"
 }
     </div>
+      <div>
+    Costo Semanal: {
+      typeof totalSemanal === "number"
+        ? `$ ${totalSemanal.toFixed(2)}`
+        : "—"
+    }
+  </div>
       <h1>Horarios de Personal</h1>
       <table style={{ width: "100%", borderCollapse: "collapse" }}>
         <thead>
@@ -164,7 +174,7 @@ export default function App() {
             <th>Día</th>
             <th>Inicio</th>
             <th>Fin</th>
-            <th>Costo</th>
+            <th>Costo por hora</th>
           </tr>
         </thead>
         <tbody>
@@ -181,7 +191,6 @@ export default function App() {
         </tbody>
       </table>
       {/* Aquí aparece el Gantt */}
-      <GanttChart data={data} />
       <GanttSVG data={data} width={1000} />
     </div>
   );

@@ -123,84 +123,133 @@ export default function GanttSVG({ data = [], width = 1000, rowHeight = 56, hour
         })}
 
         {/* Task rectangles (for each day, draw all tasks in that day row) */}
-        {days.map((d, i) => {
-          const yTop = 40 + i * rowHeight;
-          const innerPadding = 8;
-          const barHeight = rowHeight - innerPadding * 2;
+{days.map((d, i) => {
+  const dayTop = 40 + i * rowHeight;
+  const tlist = tasksByDay[d] || [];
 
-          // tasks in this day
-          const tlist = tasksByDay[d] || [];
+  // empleados únicos dentro del día (orden determinista)
+  const employeesInDay = [...new Set(tlist.map(t => t.empleado))];
 
-          return (
-            <g key={`tasks-day-${d}`}>
-              {tlist.map((t, idx) => {
-                // handle wrap-around shifts (end <= start) by treating end as next day (end += 24)
-                let start = t.start;
-                let end = t.end;
-                let wrapped = false;
-                if (end <= start) {
-                  end = end + 24;
-                  wrapped = true;
-                }
+  // slots = número de renglones internos (al menos 1 para evitar división por 0)
+  const slots = employeesInDay.length || 1;
 
-                // clip to 0..24 for drawing on this chart (we won't draw beyond range)
-                const drawStart = Math.max(0, start);
-                const drawEnd = Math.min(24, end);
+  // cada sub-renglon dentro del día obtiene esta altura (manteniendo rowHeight fijo)
+  const slotHeight = rowHeight / slots;
+  const innerPadding = 4;
+  // altura mínima de barra para que siempre se vea algo
+  const barHeight = Math.max(8, slotHeight - innerPadding * 2);
 
-                const x = hourToX(drawStart);
-                const widthPx = (drawEnd - drawStart) * pxPerHour;
+  // dibujar fondo del día (altura fija)
+  return (
+    <g key={`tasks-day-${d}`}>
+      {/* Fondo del día */}
+      <rect
+        x={leftColumnWidth}
+        y={dayTop}
+        width={chartWidth}
+        height={rowHeight}
+        fill={i % 2 === 0 ? "#fafafa" : "#ffffff"}
+      />
 
-                const color = getColorForEmployee(t.empleado, employees);
+      {/* Etiqueta del día (centrada verticalmente en el rowHeight) */}
+      <text
+        x={leftColumnWidth - 12}
+        y={dayTop + rowHeight / 2}
+        textAnchor="end"
+        dominantBaseline="middle"
+        fontSize={13}
+        fontWeight={700}
+      >
+        Día {d}
+      </text>
 
-                const tooltipContent = (
-                  <div>
-                    <div style={{ fontWeight: 700 }}>{t.empleado} — {t.turno ?? ""}</div>
-                    <div>Día: {t.dia}</div>
-                    <div>Inicio: {t.start}:00</div>
-                    <div>Fin: {t.end}:00 {wrapped ? "(siguiente día)" : ""}</div>
-                  </div>
-                );
+      {/* separadores internos para visualizar sub-renglones */}
+      {Array.from({ length: slots - 1 }).map((_, k) => (
+        <line
+          key={`sep-${d}-${k}`}
+          x1={leftColumnWidth}
+          x2={leftColumnWidth + chartWidth}
+          y1={dayTop + (k + 1) * slotHeight}
+          y2={dayTop + (k + 1) * slotHeight}
+          stroke="#f0f0f0"
+        />
+      ))}
 
-                return (
-                  <g key={`task-${d}-${idx}`}>
-                    <rect
-                      x={x}
-                      y={yTop + innerPadding}
-                      width={Math.max(2, widthPx)} // mínimo visible
-                      height={barHeight}
-                      rx={6}
-                      fill={color}
-                      stroke="#3333"
-                      onMouseEnter={(e) => {
-                        const bbox = e.currentTarget.getBoundingClientRect();
-                        setTooltip({
-                          visible: true,
-                          x: bbox.x + bbox.width/2,
-                          y: bbox.y - 10,
-                          content: tooltipContent
-                        });
-                      }}
-                      onMouseLeave={() => setTooltip({ visible: false, x:0, y:0, content:null })}
-                    />
+      {/* Dibujar cada tarea en su sub-renglon asignado */}
+      {tlist.map((t, idx) => {
+        const empIndex = Math.max(0, employeesInDay.indexOf(t.empleado));
+        const yBase = dayTop + empIndex * slotHeight + innerPadding;
 
-                    {/* Label inside bar if espacio */}
-                    {widthPx > 50 && (
-                      <text
-                        x={x + 8}
-                        y={yTop + innerPadding + barHeight/2}
-                        fontSize={12}
-                        fill="#fff"
-                        dominantBaseline="middle"
-                      >
-                        {t.empleado}
-                      </text>
-                    )}
-                  </g>
-                );
-              })}
-            </g>
-          );
-        })}
+        // manejar shifts que cruzan medianoche (end <= start)
+        let start = Number(t.start);
+        let end = Number(t.end);
+        let wrapped = false;
+        if (!Number.isFinite(start)) start = 0;
+        if (!Number.isFinite(end)) end = start; // evita NaN
+        if (end <= start) {
+          end = end + 24;
+          wrapped = true;
+        }
+
+        // limitar dibujo a 0..24 (si el shift excede, sólo dibuja la parte dentro del día)
+        const drawStart = Math.max(0, start);
+        const drawEnd = Math.min(24, end);
+        const widthPx = Math.max(2, (drawEnd - drawStart) * pxPerHour);
+        const x = hourToX(drawStart);
+
+        const color = getColorForEmployee(t.empleado, employees);
+
+        const tooltipContent = (
+          <div>
+            <div style={{ fontWeight: 700 }}>{t.empleado} — {t.turno ?? ""}</div>
+            <div>Día: {t.dia}</div>
+            <div>Inicio: {t.start}:00</div>
+            <div>Fin: {t.end}:00 {wrapped ? "(siguiente día)" : ""}</div>
+          </div>
+        );
+
+        return (
+          <g key={`task-${d}-${idx}`}>
+            <rect
+              x={x}
+              y={yBase}
+              width={widthPx}
+              height={barHeight}
+              rx={6}
+              fill={color}
+              opacity={0.55}
+              stroke="#3333"
+              onMouseEnter={(e) => {
+                const bbox = e.currentTarget.getBoundingClientRect();
+                setTooltip({
+                  visible: true,
+                  x: bbox.x + bbox.width / 2,
+                  y: bbox.y - 10,
+                  content: tooltipContent
+                });
+              }}
+              onMouseLeave={() => setTooltip({ visible: false, x: 0, y: 0, content: null })}
+            />
+
+            {/* Label dentro de la barra si hay espacio */}
+            {widthPx > 40 && (
+              <text
+                x={x + 6}
+                y={yBase + barHeight / 2}
+                fontSize={11}
+                fill="#fff"
+                dominantBaseline="middle"
+              >
+                {t.empleado}
+              </text>
+            )}
+          </g>
+        );
+      })}
+    </g>
+  );
+})}
+
 
         {/* Left vertical divider */}
         <line x1={leftColumnWidth} y1={30} x2={leftColumnWidth} y2={svgHeight - 20} stroke="#ddd" />
